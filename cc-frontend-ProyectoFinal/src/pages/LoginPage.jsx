@@ -1,16 +1,23 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const LoginPage = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
+  const navigate = useNavigate(); // Hook para redirigir
 
   const handleLogin = async (e) => {
     e.preventDefault();
     try {
-      await axios.post("http://localhost:5000/login", { email, password });
+      const response = await axios.post("http://localhost:5000/login", {
+        email,
+        password,
+      });
+      localStorage.setItem("token", response.data.token); // Guarda el token
       alert("Inicio de sesión exitoso");
+      navigate("/dashboard"); // Redirige a otra página, por ejemplo, "/dashboard"
     } catch {
       setError("Credenciales inválidas");
     }

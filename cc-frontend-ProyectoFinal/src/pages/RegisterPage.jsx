@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import axios from "axios";
 
 const RegisterPage = () => {
@@ -8,6 +9,7 @@ const RegisterPage = () => {
     role: "",
   });
   const [message, setMessage] = useState("");
+  const navigate = useNavigate(); // Hook para redirigir
 
   const handleRegister = async (e) => {
     e.preventDefault();
@@ -15,6 +17,8 @@ const RegisterPage = () => {
       await axios.post("http://localhost:5000/users", formData);
       setMessage("Usuario creado exitosamente");
       setFormData({ name: "", email: "", role: "" });
+      alert("Registro exitoso");
+      navigate("/"); // Redirige al Login después de registrarse
     } catch {
       setMessage("Error creando usuario");
     }
