@@ -9,29 +9,37 @@ provider:
     TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
 
 functions:
-  app:
-    handler: wsgi_handler.handler
+  crearPedido:
+    handler: CrearPedido.lambda_handler
     events:
       - http:
-          path: /orders
-          method: any
+          path: /pedido/crear
+          method: post
           cors: true
+
+  obtenerPedido:
+    handler: ObtenerPedido.lambda_handler
+    events:
       - http:
-          path: /orders/{order_id}
-          method: any
+          path: /pedido/{order_id}
+          method: get
           cors: true
 
-plugins:
-  - serverless-python-requirements
-  - serverless-wsgi
+  actualizarPedido:
+    handler: ActualizarPedido.lambda_handler
+    events:
+      - http:
+          path: /pedido/actualizar
+          method: put
+          cors: true
 
-custom:
-  wsgi:
-    app: order_controller.app
-    packRequirements: false
-  pythonRequirements:
-    dockerizePip: non-linux
-    usePoetry: false
+  eliminarPedido:
+    handler: EliminarPedido.lambda_handler
+    events:
+      - http:
+          path: /pedido/eliminar
+          method: delete
+          cors: true
 
 resources:
   Resources:
