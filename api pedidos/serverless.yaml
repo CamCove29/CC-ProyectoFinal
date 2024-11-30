@@ -10,7 +10,7 @@ provider:
 
 functions:
   app:
-    handler: wsgi_handler.handler
+    handler: main.app
     events:
       - http:
           path: /orders
@@ -23,15 +23,11 @@ functions:
 
 plugins:
   - serverless-python-requirements
-  - serverless-wsgi
 
 custom:
-  wsgi:
-    app: order_controller.app
-    packRequirements: false
   pythonRequirements:
-    dockerizePip: non-linux
-    usePoetry: false
+    dockerizePip: true
+    layer: true
 
 resources:
   Resources:
@@ -41,7 +37,7 @@ resources:
         TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
           - AttributeName: tenant_id
-           AttributeType: S
+            AttributeType: S
           - AttributeName: order_id
             AttributeType: S
           - AttributeName: customer_name
@@ -72,4 +68,3 @@ resources:
                 KeyType: RANGE
             Projection:
               ProjectionType: ALL
-
