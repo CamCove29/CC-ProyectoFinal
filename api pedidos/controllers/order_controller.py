@@ -1,5 +1,5 @@
 from flask import Blueprint, request, jsonify
-from services.order_service import list_orders, retrieve_order, add_order, modify_order, remove_order
+from services.order_services import list_orders, retrieve_order, add_order, modify_order, remove_order
 from utils.auth import validate_token
 
 order_blueprint = Blueprint('order', __name__)

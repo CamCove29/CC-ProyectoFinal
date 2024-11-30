@@ -1,0 +1,75 @@
+service: orderService
+
+provider:
+  name: aws
+  runtime: python3.10
+  region: us-east-1
+  role: ${file(../roleARN.yaml):roles.LabRole}
+  environment:
+    TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
+
+functions:
+  app:
+    handler: wsgi_handler.handler
+    events:
+      - http:
+          path: /orders
+          method: any
+          cors: true
+      - http:
+          path: /orders/{order_id}
+          method: any
+          cors: true
+
+plugins:
+  - serverless-python-requirements
+  - serverless-wsgi
+
+custom:
+  wsgi:
+    app: order_controller.app
+    packRequirements: false
+  pythonRequirements:
+    dockerizePip: non-linux
+    usePoetry: false
+
+resources:
+  Resources:
+    OrdersTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.TABLE_NAME}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+           AttributeType: S
+          - AttributeName: order_id
+            AttributeType: S
+          - AttributeName: customer_name
+            AttributeType: S
+          - AttributeName: created_at
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: order_id
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: customer_name-index
+            KeySchema:
+              - AttributeName: customer_name
+                KeyType: HASH
+              - AttributeName: tenant_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+        LocalSecondaryIndexes:
+          - IndexName: created_at-index
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: created_at
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
+
