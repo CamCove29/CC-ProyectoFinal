@@ -2,8 +2,9 @@ service: inventoryService
 
 provider:
   name: aws
-  runtime: nodejs14.x
+  runtime: nodejs20.x
   region: us-east-1
+  role: ${file(../roleARN.yaml):roles.LabRole}
   environment:
     TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
 
@@ -33,12 +34,14 @@ resources:
             AttributeType: S
           - AttributeName: last_update
             AttributeType: S
+          - AttributeName: product_name
+            AttributeType: S
         KeySchema:
           - AttributeName: tenant_id
             KeyType: HASH
           - AttributeName: product_id
             KeyType: RANGE
-        BillingMode: PAY_PER_REQUEST
+             BillingMode: PAY_PER_REQUEST
         GlobalSecondaryIndexes:
           - IndexName: product_name-index
             KeySchema:
