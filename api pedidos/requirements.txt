@@ -1,3 +1,6 @@
-Flask
-boto3
-jwt
+fastapi==0.100.0
+pydantic==2.0.3
+boto3==1.28.12
+mangum==0.13.0
+PyJWT 
+uvicorn==0.23.0
