@@ -16,10 +16,6 @@ functions:
           path: /pedido/crear
           method: post
           cors: true
-          request:
-            parameters:
-              headers:
-                Authorization: true
 
   obtenerPedido:
     handler: ObtenerPedido.lambda_handler
@@ -28,10 +24,6 @@ functions:
           path: /pedido/{order_id}
           method: get
           cors: true
-          request:
-            parameters:
-              headers:
-                Authorization: true
 
   actualizarPedido:
     handler: ActualizarPedido.lambda_handler
@@ -40,10 +32,6 @@ functions:
           path: /pedido/actualizar
           method: put
           cors: true
-          request:
-            parameters:
-              headers:
-                Authorization: true
 
   eliminarPedido:
     handler: EliminarPedido.lambda_handler
@@ -52,10 +40,6 @@ functions:
           path: /pedido/eliminar
           method: delete
           cors: true
-          request:
-            parameters:
-              headers:
-                Authorization: true
 
 resources:
   Resources:

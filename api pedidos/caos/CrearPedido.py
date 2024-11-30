@@ -1,13 +1,12 @@
 import boto3
 import uuid
 from datetime import datetime
-from auth import validar_api_key
 import json
+import os
 
 def lambda_handler(event, context):
     try:
         headers = event['headers']
-        validar_api_key(headers)
         
         body = json.loads(event['body'])
         tenant_id = body['tenant_id']
@@ -21,33 +20,33 @@ def lambda_handler(event, context):
             }
 
         dynamodb = boto3.resource('dynamodb')
-        table = dynamodb.Table('tabla_pedidos')
+        table_name = os.getenv("TABLE_NAME")
+        if not table_name:
+            raise Exception("El nombre de la tabla no esta configurado en las variables de entorno.")
+        table = dynamodb.Table(table_name)
 
+        print("Nombre de la tabla DynamoDB", table_name)
         order_id = str(uuid.uuid4())
-        created_at = datetime.utcnow().strftime('%Y-%m-%d %H:%M:%S')
+        created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
 
-        table.put_item(
-            Item={
+        item={
                 'tenant_id': tenant_id,
                 'order_id': order_id,
                 'customer_name': customer_name,
                 'items': items,
                 'created_at': created_at,
                 'status': 'CREATED'
-            }
-        )
+        }
+        print("Item a insertar:", item)
+        table.put_item(Item=item)
 
         return {
-            'statusCode': 201,
-            'body': {'message': 'Pedido creado exitosamente.', 'order_id': order_id}
+            'statusCode': 200,  # Código HTTP esperado
+            'headers': {'Content-Type': 'application/json'},
+            'body': json.dumps({'message': 'Pedido creado exitosamente.'})
         }
 
-    except ValueError as e:
-        return {
-            'statusCode': 403,
-            'body': f'{str(e)}'
-        }
-        
+
     except json.JSONDecodeError:
         return {
             'statusCode': 400,
