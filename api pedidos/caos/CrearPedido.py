@@ -1,14 +1,13 @@
 import boto3
 import uuid
 from datetime import datetime
-from auth import validar_token
+from auth import validar_api_key
 import json
 
 def lambda_handler(event, context):
     try:
         headers = event['headers']
-        user_payload = validar_token(headers)
-        user_id = user_payload['user_id']
+        validar_api_key(headers)
         
         body = json.loads(event['body'])
         tenant_id = body['tenant_id']
@@ -43,16 +42,12 @@ def lambda_handler(event, context):
             'body': {'message': 'Pedido creado exitosamente.', 'order_id': order_id}
         }
 
-    except jwt.ExpiredSignatureError:
-        return {
-            'statusCode': 401,
-            'body': 'El token ha expirado.'
-        }
-    except jwt.InvalidTokenError as e:
+    except ValueError as e:
         return {
             'statusCode': 403,
-            'body': f'Token inválido: {str(e)}'
+            'body': f'{str(e)}'
         }
+        
     except json.JSONDecodeError:
         return {
             'statusCode': 400,
