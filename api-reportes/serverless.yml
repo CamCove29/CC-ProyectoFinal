@@ -1,44 +1,25 @@
-org: fabriciobautista
 service: api-reportes
 
 provider:
   name: aws
+  runtime: nodejs20.x
   region: us-east-1
-  runtime: nodejs18.x
-  memorySize: 1024
-  timeout: 30
-  iam:
-    role: arn:aws:iam::359604420564:role/LabRole 
   environment:
-    TABLE_NAME: ${self:service}-${self:provider.stage}-reportes
+    TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
+    SECRET_KEY: your_jwt_secret
 
 functions:
-  createSalesReport:
-    handler: handlers/reportes.createSalesReport
+  app:
+    handler: index.handler
     events:
       - http:
           path: /reports/sales
-          method: post
+          method: any
           cors: true
-          authorizer: aws_iam
-
-  getSalesReport:
-    handler: handlers/reportes.getSalesReport
-    events:
       - http:
           path: /reports/sales/{report_id}
-          method: get
+          method: any
           cors: true
-          authorizer: aws_iam
-
-  listSalesReports:
-    handler: handlers/reportes.listSalesReports
-    events:
-      - http:
-          path: /reports/sales
-          method: get
-          cors: true
-          authorizer: aws_iam
 
 resources:
   Resources:
@@ -81,6 +62,3 @@ resources:
               ProjectionType: ALL
         PointInTimeRecoverySpecification:
           PointInTimeRecoveryEnabled: true
-
-plugins:
-  - serverless-offline

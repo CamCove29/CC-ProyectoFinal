@@ -1,31 +1,27 @@
-const { getReportById, createReport, queryReportsByType, queryReportsByDate } = require('../models/report_model');
+const { getReportById, createReport, queryReportsByType } = require('../models/report_model');
 
-const generateSalesReport = async (tenant_id) => {
-    const report = {
-        tenant_id,
-        report_id: `report_${Date.now()}`,
-        report_type: 'ventas',
-        created_at: new Date().toISOString(),
-        data: {
-            total_sales: 50000,
-            total_orders: 250,
-            average_order_value: 200
-        }
-    };
-    const report_id = await createReport(report);
-    return report;
+const generateSalesReport = async (tenantId) => {
+  const report = {
+    tenant_id: tenantId,
+    report_id: `report_${Date.now()}`,
+    report_type: 'ventas',
+    created_at: new Date().toISOString(),
+    data: {
+      total_sales: 50000,
+      total_orders: 250,
+      average_order_value: 200,
+    },
+  };
+  await createReport(report);
+  return report;
 };
 
-const getSalesReport = async (tenant_id, report_id) => {
-    return await getReportById(tenant_id, report_id);
+const getSalesReport = async (tenantId, reportId) => {
+  return await getReportById(tenantId, reportId);
 };
 
-const listSalesReports = async (tenant_id, report_type) => {
-    return await queryReportsByType(tenant_id, report_type);
+const listSalesReports = async (tenantId, reportType) => {
+  return await queryReportsByType(tenantId, reportType);
 };
 
-module.exports = {
-    generateSalesReport,
-    getSalesReport,
-    listSalesReports
-};
+module.exports = { generateSalesReport, getSalesReport, listSalesReports };
