@@ -4,40 +4,39 @@ provider:
   name: aws
   runtime: python3.10
   region: us-east-1
-  role: ${file(../roleARN.yaml):roles.LabRole}  # Rol de IAM para las funciones Lambda
+  role: ${file(../roleARN.yaml):roles.LabRole}
   environment:
-    USERS_TABLE: ${self:service}-${opt:stage, 'dev'}
+    TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
+    AUTH_TOKENS_TABLE: ${self:service}-auth-tokens-${opt:stage, 'dev'}
 
 functions:
-  getUsers:
-    handler: user_lambda.get_users
-    events:
-      - http:
-          path: /users
-          method: get
-          queryStringParameters:
-            - tenant_id
-          cors: true
-
   createUser:
-    handler: user_lambda.create_user
+    handler: create_user.lambda_handler
     events:
       - http:
           path: /users
           method: post
           cors: true
 
-  manageUser:
-    handler: user_lambda.manage_user
+  getAllUsers:
+    handler: get_all_users.lambda_handler
     events:
       - http:
-          path: /users/{user_id}
+          path: /users
           method: get
           cors: true
+
+  updateUser:
+    handler: update_user.lambda_handler
+    events:
       - http:
           path: /users/{user_id}
           method: put
           cors: true
+
+  deleteUser:
+    handler: delete_user.lambda_handler
+    events:
       - http:
           path: /users/{user_id}
           method: delete
@@ -48,73 +47,40 @@ resources:
     UsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.USERS_TABLE}
+        TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
           - AttributeName: user_id
-            AttributeType: S  # ID del usuario (String)
+            AttributeType: S
           - AttributeName: tenant_id
-            AttributeType: S  # ID del tenant (String)
+            AttributeType: S
           - AttributeName: email
-            AttributeType: S  # Correo electrónico del usuario (String)
-          - AttributeName: name
-            AttributeType: S  # Nombre del usuario (String)
+            AttributeType: S
           - AttributeName: role
-            AttributeType: S  # Rol del usuario (String)
+            AttributeType: S  # Nuevo atributo role
         KeySchema:
           - AttributeName: tenant_id
-            KeyType: HASH  # La clave HASH es el tenant_id para asegurar multi-tenancy
+            KeyType: HASH
           - AttributeName: user_id
-            KeyType: RANGE  # La clave RANGE es el user_id, único dentro de cada tenant
-        BillingMode: PAY_PER_REQUEST  # Facturación bajo demanda
+            KeyType: RANGE  # Identificador único del usuario por tenant
+        BillingMode: PAY_PER_REQUEST
         GlobalSecondaryIndexes:
+          - IndexName: tenant-id-index
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: user_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
           - IndexName: email-index
             KeySchema:
               - AttributeName: email
-                KeyType: HASH  # Busca por correo electrónico
-              - AttributeName: tenant_id
-                KeyType: RANGE  # Limita la búsqueda al tenant específico
+                KeyType: HASH
             Projection:
               ProjectionType: ALL
-        LocalSecondaryIndexes:
-          - IndexName: name-index
+          - IndexName: role-index
             KeySchema:
-              - AttributeName: tenant_id
-                KeyType: HASH  # Busca por tenant_id
-              - AttributeName: name
-                KeyType: RANGE  # Limita la búsqueda por nombre dentro del tenant
+              - AttributeName: role
+                KeyType: HASH  # Permite búsquedas por role
             Projection:
               ProjectionType: ALL
-
-  # Opcional: Crear un recurso Cognito para la validación de tokens si lo usas
-  # CognitoUserPool:
-  #   Type: AWS::Cognito::UserPool
-  #   Properties:
-  #     UserPoolName: ${self:service}-userpool-${opt:stage, 'dev'}
-
-  # Opcional: Puedes agregar configuraciones de IAM para que las funciones Lambda puedan acceder a DynamoDB y Cognito
-  # IAMRoleLambdaExecution:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: "Allow"
-  #           Action:
-  #             - "sts:AssumeRole"
-  #           Principal:
-  #             Service:
-  #               - "lambda.amazonaws.com"
-  #     Policies:
-  #       - PolicyName: DynamoDBPolicy
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Effect: "Allow"
-  #               Action:
-  #                 - "dynamodb:Scan"
-  #                 - "dynamodb:GetItem"
-  #                 - "dynamodb:PutItem"
-  #                 - "dynamodb:UpdateItem"
-  #                 - "dynamodb:DeleteItem"
-  #               Resource:
-  #                 - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}
