@@ -1,123 +1,191 @@
+import json
 import boto3
 import uuid
-import json
+import os
+from datetime import datetime
 
-# Conexión a DynamoDB
+# Configuración de DynamoDB
 dynamodb = boto3.resource('dynamodb')
-product_table = dynamodb.Table('Productos')
+table_name = os.getenv("TABLE_NAME")
+table = dynamodb.Table(table_name)
 
-# Función para listar productos
-def list_products():
-    response = product_table.scan()
-    return response['Items']
+def lambda_handler(event, context):
+    """
+    Manejador principal de la función Lambda.
+    Gestiona todas las operaciones relacionadas con los productos.
+    """
+    http_method = event['httpMethod']
+    tenant_id = event['queryStringParameters'].get('tenant_id') if event.get('queryStringParameters') else None
+    product_id = event['pathParameters'].get('product_id') if event.get('pathParameters') else None
 
-# Función para recuperar un producto por ID
-def retrieve_product(product_id):
-    response = product_table.get_item(Key={'product_id': product_id})
-    return response.get('Item', None)
-
-# Función para agregar un producto
-def add_product(data):
-    product_id = str(uuid.uuid4())
-    data['product_id'] = product_id
-    product_table.put_item(Item=data)
-    return product_id
-
-# Función para modificar un producto
-def modify_product(product_id, data):
-    product_table.update_item(
-        Key={'product_id': product_id},
-        UpdateExpression="SET #name = :name, #price = :price, #desc = :desc",
-        ExpressionAttributeNames={
-            "#name": "name",
-            "#price": "price",
-            "#desc": "description"
-        },
-        ExpressionAttributeValues={
-            ':name': data['name'],
-            ':price': data['price'],
-            ':desc': data['description']
+    if http_method == 'GET' and product_id:
+        return get_product(tenant_id, product_id)
+    elif http_method == 'GET' and not product_id:
+        return get_products(tenant_id)
+    elif http_method == 'POST':
+        return create_product(event)
+    elif http_method == 'PUT':
+        return update_product(tenant_id, product_id, event)
+    elif http_method == 'DELETE':
+        return delete_product(tenant_id, product_id)
+    else:
+        return {
+            'statusCode': 405,
+            'body': json.dumps({'message': 'Method Not Allowed'})
         }
-    )
 
-# Función para eliminar un producto
-def remove_product(product_id):
-    product_table.delete_item(Key={'product_id': product_id})
+def get_products(tenant_id):
+    """Obtener todos los productos de un tenant."""
+    if not tenant_id:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'El parámetro tenant_id es obligatorio.'})
+        }
 
-# Funciones Lambda
-
-# Obtener productos
-def get_products(event, context):
-    products = list_products()
-    return {
-        'statusCode': 200,
-        'headers': {'Content-Type': 'application/json'},
-        'body': json.dumps(products)
-    }
-
-# Crear producto
-def create_product(event, context):
     try:
-        data = json.loads(event['body'])
-        product_id = add_product(data)
+        response = table.query(
+            KeyConditionExpression="tenant_id = :tenant_id",
+            ExpressionAttributeValues={":tenant_id": tenant_id}
+        )
+
         return {
             'statusCode': 200,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps({'message': 'Product created', 'product_id': product_id})
+            'body': json.dumps(response['Items'])
         }
     except Exception as e:
         return {
-            'statusCode': 400,
-            'headers': {'Content-Type': 'application/json'},
-            'body': json.dumps({'error': str(e)})
+            'statusCode': 500,
+            'body': json.dumps({'message': str(e)})
         }
 
-# Manejar productos (consultar, actualizar, eliminar)
-def manage_product(event, context):
-    product_id = event['pathParameters']['product_id']
-    
-    if event['httpMethod'] == 'GET':
-        product = retrieve_product(product_id)
-        if product:
-            return {
-                'statusCode': 200,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps(product)
-            }
-        else:
+def get_product(tenant_id, product_id):
+    """Obtener un producto específico de un tenant."""
+    if not tenant_id or not product_id:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'})
+        }
+
+    try:
+        response = table.get_item(
+            Key={'tenant_id': tenant_id, 'product_id': product_id}
+        )
+
+        item = response.get('Item')
+
+        if not item:
             return {
                 'statusCode': 404,
-                'headers': {'Content-Type': 'application/json'},
                 'body': json.dumps({'message': 'Product not found'})
             }
-    
-    elif event['httpMethod'] == 'PUT':
-        try:
-            data = json.loads(event['body'])
-            modify_product(product_id, data)
-            return {
-                'statusCode': 200,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'message': 'Product updated'})
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps(item)
+        }
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': str(e)})
+        }
+
+def create_product(event):
+    """Crear un nuevo producto para un tenant."""
+    body = json.loads(event['body'])
+    tenant_id = body.get('tenant_id')
+    product_name = body.get('name')
+    price = body.get('price')
+    description = body.get('description')
+
+    if not tenant_id or not product_name or not price or not description:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'Los campos tenant_id, name, price y description son obligatorios.'})
+        }
+
+    try:
+        product_id = str(uuid.uuid4())
+        created_at = datetime.now().strftime('%Y-%m-%d %H:%M:%S')
+
+        item = {
+            'tenant_id': tenant_id,
+            'product_id': product_id,
+            'name': product_name,
+            'price': price,
+            'description': description,
+            'created_at': created_at
+        }
+
+        table.put_item(Item=item)
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'Product created', 'product_id': product_id})
+        }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': str(e)})
+        }
+
+def update_product(tenant_id, product_id, event):
+    """Actualizar un producto existente de un tenant."""
+    if not tenant_id or not product_id:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'})
+        }
+
+    body = json.loads(event['body'])
+
+    try:
+        table.update_item(
+            Key={'tenant_id': tenant_id, 'product_id': product_id},
+            UpdateExpression="SET #name = :name, #price = :price, #desc = :desc",
+            ExpressionAttributeNames={
+                '#name': 'name',
+                '#price': 'price',
+                '#desc': 'description'
+            },
+            ExpressionAttributeValues={
+                ':name': body.get('name'),
+                ':price': body.get('price'),
+                ':desc': body.get('description')
             }
-        except Exception as e:
-            return {
-                'statusCode': 400,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'error': str(e)})
-            }
-    
-    elif event['httpMethod'] == 'DELETE':
-        try:
-            remove_product(product_id)
-            return {
-                'statusCode': 200,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'message': 'Product deleted'})
-            }
-        except Exception as e:
-            return {
-                'statusCode': 400,
-                'headers': {'Content-Type': 'application/json'},
-                'body': json.dumps({'error': str(e)})
-            }
+        )
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'Product updated'})
+        }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': str(e)})
+        }
+
+def delete_product(tenant_id, product_id):
+    """Eliminar un producto de un tenant."""
+    if not tenant_id or not product_id:
+        return {
+            'statusCode': 400,
+            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'})
+        }
+
+    try:
+        table.delete_item(
+            Key={'tenant_id': tenant_id, 'product_id': product_id}
+        )
+
+        return {
+            'statusCode': 200,
+            'body': json.dumps({'message': 'Product deleted'})
+        }
+
+    except Exception as e:
+        return {
+            'statusCode': 500,
+            'body': json.dumps({'message': str(e)})
+        }
