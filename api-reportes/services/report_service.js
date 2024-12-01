@@ -36,7 +36,7 @@ const generateSalesReport = async (tenantId) => {
 const listSalesReports = async (tenantId) => {
   const params = {
     TableName: process.env.TABLE_NAME,  // La tabla de reportes
-    KeyConditionExpression: 'tenant_id = :tenant_id)', 
+    KeyConditionExpression: 'tenant_id = :tenant_id', 
     ExpressionAttributeValues: {
       ':tenant_id': tenantId
     },
