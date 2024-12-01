@@ -33,8 +33,6 @@ resources:
             AttributeType: S
           - AttributeName: report_id
             AttributeType: S
-          - AttributeName: report_type
-            AttributeType: S
           - AttributeName: created_at
             AttributeType: S
         KeySchema:
@@ -48,8 +46,6 @@ resources:
             KeySchema:
               - AttributeName: tenant_id
                 KeyType: HASH
-              - AttributeName: report_type
-                KeyType: RANGE
             Projection:
               ProjectionType: ALL
         LocalSecondaryIndexes:
