@@ -10,32 +10,24 @@ provider:
     AUTH_TOKENS_TABLE: ${self:service}-auth-tokens-${opt:stage, 'dev'}
 
 functions:
-  getUsers:
-    handler: user_lambda.get_all_users
-    events:
-      - http:
-          path: /users
-          method: get
-          cors: true
-
   createUser:
-    handler: user_lambda.create_user
+    handler: create_user.lambda_handler
     events:
       - http:
           path: /users
           method: post
           cors: true
 
-  getUser:
-    handler: user_lambda.get_user
+  getAllUsers:
+    handler: get_all_users.lambda_handler
     events:
       - http:
-          path: /users/{user_id}
+          path: /users
           method: get
           cors: true
 
   updateUser:
-    handler: user_lambda.update_user
+    handler: update_user.lambda_handler
     events:
       - http:
           path: /users/{user_id}
@@ -43,7 +35,7 @@ functions:
           cors: true
 
   deleteUser:
-    handler: user_lambda.delete_user
+    handler: delete_user.lambda_handler
     events:
       - http:
           path: /users/{user_id}
@@ -59,28 +51,36 @@ resources:
         AttributeDefinitions:
           - AttributeName: user_id
             AttributeType: S
+          - AttributeName: tenant_id
+            AttributeType: S
           - AttributeName: email
             AttributeType: S
+          - AttributeName: role
+            AttributeType: S  # Nuevo atributo role
         KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
           - AttributeName: user_id
-            KeyType: HASH  # Identificador único del usuario
+            KeyType: RANGE  # Identificador único del usuario por tenant
         BillingMode: PAY_PER_REQUEST
         GlobalSecondaryIndexes:
+          - IndexName: tenant-id-index
+            KeySchema:
+              - AttributeName: tenant_id
+                KeyType: HASH
+              - AttributeName: user_id
+                KeyType: RANGE
+            Projection:
+              ProjectionType: ALL
           - IndexName: email-index
             KeySchema:
               - AttributeName: email
-                KeyType: HASH  # Permite búsquedas por email
+                KeyType: HASH
             Projection:
               ProjectionType: ALL
-
-    AuthTokensTable:
-      Type: AWS::DynamoDB::Table
-      Properties:
-        TableName: ${self:provider.environment.AUTH_TOKENS_TABLE}
-        AttributeDefinitions:
-          - AttributeName: token
-            AttributeType: S
-        KeySchema:
-          - AttributeName: token
-            KeyType: HASH  # Token único por usuario
-        BillingMode: PAY_PER_REQUEST
+          - IndexName: role-index
+            KeySchema:
+              - AttributeName: role
+                KeyType: HASH  # Permite búsquedas por role
+            Projection:
+              ProjectionType: ALL
