@@ -15,6 +15,8 @@ functions:
       - http:
           path: /products
           method: get
+          queryStringParameters:
+            - tenant_id
           cors: true
 
   createProduct:
@@ -29,15 +31,18 @@ functions:
     handler: product_lambda.lambda_handler
     events:
       - http:
-          path: /products/{product_id}
+          path: /products
           method: get
+          queryStringParameters:
+            - product_id
+            - tenant_id
           cors: true
       - http:
-          path: /products/{product_id}
+          path: /products
           method: put
           cors: true
       - http:
-          path: /products/{product_id}
+          path: /products
           method: delete
           cors: true
 

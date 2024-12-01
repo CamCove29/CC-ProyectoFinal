@@ -3,11 +3,19 @@ import boto3
 import uuid
 import os
 from datetime import datetime
+from decimal import Decimal
 
 # Configuración de DynamoDB
 dynamodb = boto3.resource('dynamodb')
 table_name = os.getenv("TABLE_NAME")
 table = dynamodb.Table(table_name)
+
+# Clase para manejar la serialización de Decimal
+class CustomJSONEncoder(json.JSONEncoder):
+    def default(self, obj):
+        if isinstance(obj, Decimal):
+            return float(obj)  # Convertir Decimal a float
+        return super().default(obj)  # Llamar al comportamiento por defecto para otros tipos
 
 def lambda_handler(event, context):
     """
@@ -16,7 +24,7 @@ def lambda_handler(event, context):
     """
     http_method = event['httpMethod']
     tenant_id = event['queryStringParameters'].get('tenant_id') if event.get('queryStringParameters') else None
-    product_id = event['pathParameters'].get('product_id') if event.get('pathParameters') else None
+    product_id = event['queryStringParameters'].get('product_id') if event.get('queryStringParameters') else None
 
     if http_method == 'GET' and product_id:
         return get_product(tenant_id, product_id)
@@ -31,7 +39,7 @@ def lambda_handler(event, context):
     else:
         return {
             'statusCode': 405,
-            'body': json.dumps({'message': 'Method Not Allowed'})
+            'body': json.dumps({'message': 'Method Not Allowed'}, cls=CustomJSONEncoder)
         }
 
 def get_products(tenant_id):
@@ -39,7 +47,7 @@ def get_products(tenant_id):
     if not tenant_id:
         return {
             'statusCode': 400,
-            'body': json.dumps({'message': 'El parámetro tenant_id es obligatorio.'})
+            'body': json.dumps({'message': 'El parámetro tenant_id es obligatorio.'}, cls=CustomJSONEncoder)
         }
 
     try:
@@ -50,12 +58,12 @@ def get_products(tenant_id):
 
         return {
             'statusCode': 200,
-            'body': json.dumps(response['Items'])
+            'body': json.dumps(response['Items'], cls=CustomJSONEncoder)
         }
     except Exception as e:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': str(e)})
+            'body': json.dumps({'message': str(e)}, cls=CustomJSONEncoder)
         }
 
 def get_product(tenant_id, product_id):
@@ -63,7 +71,7 @@ def get_product(tenant_id, product_id):
     if not tenant_id or not product_id:
         return {
             'statusCode': 400,
-            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'})
+            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'}, cls=CustomJSONEncoder)
         }
 
     try:
@@ -76,20 +84,20 @@ def get_product(tenant_id, product_id):
         if not item:
             return {
                 'statusCode': 404,
-                'body': json.dumps({'message': 'Product not found'})
+                'body': json.dumps({'message': 'Product not found'}, cls=CustomJSONEncoder)
             }
 
         return {
             'statusCode': 200,
-            'body': json.dumps(item)
+            'body': json.dumps(item, cls=CustomJSONEncoder)
         }
     except Exception as e:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': str(e)})
+            'body': json.dumps({'message': str(e)}, cls=CustomJSONEncoder)
         }
 
-def create_product(event):
+def create_product(event, context):
     """Crear un nuevo producto para un tenant."""
     body = json.loads(event['body'])
     tenant_id = body.get('tenant_id')
@@ -100,7 +108,7 @@ def create_product(event):
     if not tenant_id or not product_name or not price or not description:
         return {
             'statusCode': 400,
-            'body': json.dumps({'message': 'Los campos tenant_id, name, price y description son obligatorios.'})
+            'body': json.dumps({'message': 'Los campos tenant_id, name, price y description son obligatorios.'}, cls=CustomJSONEncoder)
         }
 
     try:
@@ -120,13 +128,13 @@ def create_product(event):
 
         return {
             'statusCode': 200,
-            'body': json.dumps({'message': 'Product created', 'product_id': product_id})
+            'body': json.dumps({'message': 'Product created', 'product_id': product_id}, cls=CustomJSONEncoder)
         }
 
     except Exception as e:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': str(e)})
+            'body': json.dumps({'message': str(e)}, cls=CustomJSONEncoder)
         }
 
 def update_product(tenant_id, product_id, event):
@@ -134,7 +142,7 @@ def update_product(tenant_id, product_id, event):
     if not tenant_id or not product_id:
         return {
             'statusCode': 400,
-            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'})
+            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'}, cls=CustomJSONEncoder)
         }
 
     body = json.loads(event['body'])
@@ -157,13 +165,13 @@ def update_product(tenant_id, product_id, event):
 
         return {
             'statusCode': 200,
-            'body': json.dumps({'message': 'Product updated'})
+            'body': json.dumps({'message': 'Product updated'}, cls=CustomJSONEncoder)
         }
 
     except Exception as e:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': str(e)})
+            'body': json.dumps({'message': str(e)}, cls=CustomJSONEncoder)
         }
 
 def delete_product(tenant_id, product_id):
@@ -171,7 +179,7 @@ def delete_product(tenant_id, product_id):
     if not tenant_id or not product_id:
         return {
             'statusCode': 400,
-            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'})
+            'body': json.dumps({'message': 'Los parámetros tenant_id y product_id son obligatorios.'}, cls=CustomJSONEncoder)
         }
 
     try:
@@ -181,11 +189,11 @@ def delete_product(tenant_id, product_id):
 
         return {
             'statusCode': 200,
-            'body': json.dumps({'message': 'Product deleted'})
+            'body': json.dumps({'message': 'Product deleted'}, cls=CustomJSONEncoder)
         }
 
     except Exception as e:
         return {
             'statusCode': 500,
-            'body': json.dumps({'message': str(e)})
+            'body': json.dumps({'message': str(e)}, cls=CustomJSONEncoder)
         }
