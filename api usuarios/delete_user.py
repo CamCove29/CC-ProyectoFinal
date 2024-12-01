@@ -8,14 +8,17 @@ user_table = dynamodb.Table('Usuarios')
 def lambda_handler(event, context):
     try:
         # Validar token
-        token = event['headers'].get('Authorization')
-        token_data = validate_token(token)
+        tenant_id = event['headers'].get('tenant_id', '')
+        token = event['headers'].get('Authorization', '')
+        token_data = validate_token(tenant_id, token)
+
         if not token_data:
             return {
                 'statusCode': 401,
                 'body': json.dumps({'message': 'Token inválido o expirado.'})
             }
 
+        # Validar si el usuario pertenece al tenant del token
         tenant_id = token_data['tenant_id']
         user_id = event['pathParameters']['user_id']
 

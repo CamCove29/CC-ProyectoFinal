@@ -6,7 +6,7 @@ provider:
   region: us-east-1
   role: ${file(../roleARN.yaml):roles.LabRole}
   environment:
-    TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
+    TABLE_NAME: Usuarios
     AUTH_TOKENS_TABLE: ${self:service}-auth-tokens-${opt:stage, 'dev'}
 
 functions:
@@ -82,5 +82,29 @@ resources:
             KeySchema:
               - AttributeName: role
                 KeyType: HASH  # Permite búsquedas por role
+            Projection:
+              ProjectionType: ALL
+    AuthTokensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.AUTH_TOKENS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: tenant_id
+            AttributeType: S
+          - AttributeName: user_id
+            AttributeType: S
+          - AttributeName: token
+            AttributeType: S
+        KeySchema:
+          - AttributeName: tenant_id
+            KeyType: HASH
+          - AttributeName: token
+            KeyType: RANGE
+        BillingMode: PAY_PER_REQUEST
+        GlobalSecondaryIndexes:
+          - IndexName: user_id-index
+            KeySchema:
+              - AttributeName: user_id
+                KeyType: HASH
             Projection:
               ProjectionType: ALL
