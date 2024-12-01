@@ -1,7 +1,7 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const billingController = require("../controllers/billing_controller");
+const billingController = require('../controllers/billing_controller');
 
-router.use("/billing", billingController);
+router.use('/', billingController);
 
 module.exports = router;

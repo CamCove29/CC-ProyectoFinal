@@ -1,50 +1,44 @@
-const express = require("express");
+const express = require('express');
 const router = express.Router();
-const {
-  generateInvoice,
-  getInvoice,
-  listInvoices,
-} = require("../services/billing_service");
-const { validateToken } = require("../utils/auth");
+const billingService = require('../services/billing_service');
 
-// Ruta para generar una nueva factura vinculada a un pedido
-router.post("/invoices", async (req, res) => {
-  const tenant_id = req.user.tenant_id; // Obtenemos el tenant_id del token JWT validado
+router.post('/invoices', async (req, res) => {
+  const tenantId = req.headers['tenant-id'];
   const { order_id, payment_details } = req.body;
+
+  if (!tenantId || !order_id || !payment_details) {
+    return res.status(400).json({ message: 'Invalid data' });
+  }
+
   try {
-    // Llamar al servicio para generar la factura
-    const invoice = await generateInvoice(tenant_id, order_id, payment_details);
-    res.status(201).json(invoice); // Retornamos la factura creada
+    const invoice = await billingService.generateInvoice(tenantId, order_id, payment_details);
+    res.status(201).json(invoice);
   } catch (error) {
-    console.error("Error generando la factura:", error);
-    res.status(500).json({ error: "Error generando la factura" });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Obtener detalles de una factura por ID
-router.get("/invoices/:invoice_id", async (req, res) => {
-  const tenant_id = req.user.tenant_id; // Obtenemos el tenant_id del token JWT validado
-  const invoice_id = req.params.invoice_id;
+router.get('/invoices/:invoice_id', async (req, res) => {
+  const tenantId = req.headers['tenant-id'];
+  const { invoice_id } = req.params;
+
   try {
-    const invoice = await getInvoice(tenant_id, invoice_id);
-    if (invoice) {
-      res.json(invoice);
-    } else {
-      res.status(404).json({ message: "Factura no encontrada" });
-    }
+    const invoice = await billingService.getInvoice(tenantId, invoice_id);
+    if (invoice) res.json(invoice);
+    else res.status(404).json({ message: 'Invoice not found' });
   } catch (error) {
-    res.status(500).json({ error: "Error obteniendo la factura" });
+    res.status(500).json({ error: error.message });
   }
 });
 
-// Listar todas las facturas
-router.get("/invoices", async (req, res) => {
-  const tenant_id = req.user.tenant_id; // Obtenemos el tenant_id del token JWT validado
+router.get('/invoices', async (req, res) => {
+  const tenantId = req.headers['tenant-id'];
+
   try {
-    const invoices = await listInvoices(tenant_id);
+    const invoices = await billingService.listInvoices(tenantId);
     res.json(invoices);
   } catch (error) {
-    res.status(500).json({ error: "Error listando las facturas" });
+    res.status(500).json({ error: error.message });
   }
 });
 

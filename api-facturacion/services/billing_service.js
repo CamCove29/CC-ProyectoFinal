@@ -1,63 +1,41 @@
-import axios from "axios";
+const AWS = require('aws-sdk');
+const uuid = require('uuid');
 
-const backendUrl = import.meta.env.VITE_BACKEND_URL;
-const ordersApiUrl = "http://localhost:5000/orders"; // URL de la API de Pedidos en Python
+const dynamoDb = new AWS.DynamoDB.DocumentClient();
+const TABLE_NAME = process.env.TABLE_NAME;
 
-// Crear factura vinculada a un pedido
-export const generateInvoice = async (tenant_id, order_id, payment_details) => {
-  try {
-    // Paso 1: Obtener los detalles del pedido
-    const orderResponse = await axios.get(`${ordersApiUrl}/${order_id}`, {
-      headers: {
-        Authorization: `Bearer ${process.env.TOKEN}`, // Suponiendo que la API de Pedidos también requiere autenticación
-      },
-    });
+async function generateInvoice(tenantId, orderId, paymentDetails) {
+  const invoiceId = `invoice_${Date.now()}`;
+  const invoice = {
+    tenant_id: tenantId,
+    invoice_id: invoiceId,
+    order_id: orderId,
+    created_at: new Date().toISOString(),
+    payment_details: paymentDetails,
+    status: 'PAID',
+  };
 
-    const order = orderResponse.data; // Datos del pedido
+  await dynamoDb.put({ TableName: TABLE_NAME, Item: invoice }).promise();
+  return invoice;
+}
 
-    // Paso 2: Crear la factura
-    const invoice = {
-      tenant_id,
-      invoice_id: `invoice_${Date.now()}`,
-      order_id: order_id,
-      created_at: new Date().toISOString(),
-      payment_details,
-      status: "PAID",
-      order_details: {
-        customer_name: order.customer_name,
-        total_amount: order.total_amount, // Puedes incluir más detalles del pedido aquí
-        products: order.products, // Detalles de productos en el pedido
-      },
-    };
+async function getInvoice(tenantId, invoiceId) {
+  const params = {
+    TableName: TABLE_NAME,
+    Key: { tenant_id: tenantId, invoice_id: invoiceId },
+  };
+  const result = await dynamoDb.get(params).promise();
+  return result.Item;
+}
 
-    // Paso 3: Guardar la factura en la base de datos de facturación (en DynamoDB, por ejemplo)
-    const invoiceResponse = await axios.post(
-      `${backendUrl}/billing/invoices`,
-      invoice,
-      {
-        headers: {
-          Authorization: `Bearer ${process.env.JWT_SECRET}`, // O token válido para la API de Facturación
-        },
-      }
-    );
+async function listInvoices(tenantId) {
+  const params = {
+    TableName: TABLE_NAME,
+    KeyConditionExpression: 'tenant_id = :tenantId',
+    ExpressionAttributeValues: { ':tenantId': tenantId },
+  };
+  const result = await dynamoDb.query(params).promise();
+  return result.Items;
+}
 
-    return invoiceResponse.data; // Devolver la factura creada
-  } catch (error) {
-    console.error("Error generando la factura:", error);
-    throw new Error("No se pudo generar la factura");
-  }
-};
-
-// Obtener una factura por ID
-export const getInvoice = async (tenant_id, invoice_id) => {
-  return await axios.get(`${backendUrl}/billing/invoices/${invoice_id}`, {
-    headers: { Authorization: `Bearer ${process.env.JWT_SECRET}` },
-  });
-};
-
-// Listar todas las facturas
-export const listInvoices = async (tenant_id) => {
-  return await axios.get(`${backendUrl}/billing/invoices`, {
-    headers: { Authorization: `Bearer ${process.env.JWT_SECRET}` },
-  });
-};
+module.exports = { generateInvoice, getInvoice, listInvoices };
