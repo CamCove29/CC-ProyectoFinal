@@ -4,6 +4,7 @@ provider:
   name: aws
   runtime: nodejs20.x
   region: us-east-1
+  role: ${file(../roleARN.yaml):roles.LabRole}
   environment:
     TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
     SECRET_KEY: your_jwt_secret
