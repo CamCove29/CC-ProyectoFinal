@@ -1,3 +1,4 @@
+const AWS = require('aws-sdk');
 const { queryOrders } = require('../models/orders_model'); // Nuevo modelo para consultar pedidos
 const { createReport } = require('../models/report_model');
 const dynamoDB = new AWS.DynamoDB.DocumentClient();
