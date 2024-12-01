@@ -4,21 +4,41 @@ from datetime import datetime
 import json
 import os
 
+def validate_user(tenant_id, user_id):
+    """Consulta la tabla de usuarios para validar que user_id pertenece a tenant_id."""
+    dynamodb = boto3.resource('dynamodb')
+    users_table = os.getenv("USERS_TABLE")
+    table = dynamodb.Table(users_table)
+    
+    response = table.get_item(
+        Key={
+            'tenant_id': tenant_id,
+            'user_id': user_id
+        }
+    )
+    return 'Item' in response  # Retorna True si el usuario existe, False si no
+
+
+
 def lambda_handler(event, context):
     try:
         headers = event['headers']
         
         body = json.loads(event['body'])
         tenant_id = body['tenant_id']
-        customer_name = body['customer_name']
+        user_id = body['user_id']
         items = body['items']
 
-        if not (tenant_id and customer_name and items):
+        if not (tenant_id and user_id and items):
             return {
                 'statusCode': 400,
-                'body': 'Los campos tenant_id, customer_name y items son obligatorios.'
+                'body': 'Los campos tenant_id, user_id y items son obligatorios.'
             }
-
+        if not validate_user(tenant_id, user_id):
+            return{
+                'statusCode': 403,
+                'body': 'Usuario no valido para este tenant'
+            }
         dynamodb = boto3.resource('dynamodb')
         table_name = os.getenv("TABLE_NAME")
         if not table_name:
@@ -32,7 +52,7 @@ def lambda_handler(event, context):
         item={
                 'tenant_id': tenant_id,
                 'order_id': order_id,
-                'customer_name': customer_name,
+                'user_id': user_id,
                 'items': items,
                 'created_at': created_at,
                 'status': 'CREATED'
