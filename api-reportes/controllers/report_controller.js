@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const { generateSalesReport, getSalesReport, listSalesReports } = require('../services/report_service');
 const { validateToken } = require('../utils/auth');
+const { getReportById } = require('../models/report_model');
 
 router.use(validateToken);
 
@@ -19,7 +20,7 @@ router.get('/sales/:report_id', async (req, res) => {
   const tenantId = req.user.tenant_id;
   const reportId = req.params.report_id;
   try {
-    const report = await getSalesReport(tenantId, reportId);
+    const report = await getReportById(tenantId, reportId);
     if (report) {
       res.json(report);
     } else {
@@ -33,7 +34,7 @@ router.get('/sales/:report_id', async (req, res) => {
 router.get('/sales', async (req, res) => {
   const tenantId = req.user.tenant_id;
   try {
-    const reports = await listSalesReports(tenantId, 'ventas');
+    const reports = await listSalesReports(tenantId);
     res.json(reports);
   } catch (error) {
     res.status(500).json({ error: 'Error listando los reportes de ventas' });
