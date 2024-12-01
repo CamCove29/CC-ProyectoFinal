@@ -4,19 +4,18 @@ provider:
   name: aws
   runtime: python3.10
   region: us-east-1
-  role: ${file(../roleARN.yaml):roles.LabRole}  # Rol de IAM para las funciones Lambda
+  role: ${file(../roleARN.yaml):roles.LabRole}
   environment:
-    USERS_TABLE: ${self:service}-${opt:stage, 'dev'}
+    TABLE_NAME: ${self:service}-${opt:stage, 'dev'}
+    AUTH_TOKENS_TABLE: ${self:service}-auth-tokens-${opt:stage, 'dev'}
 
 functions:
   getUsers:
-    handler: user_lambda.get_users
+    handler: user_lambda.get_all_users
     events:
       - http:
           path: /users
           method: get
-          queryStringParameters:
-            - tenant_id
           cors: true
 
   createUser:
@@ -27,17 +26,25 @@ functions:
           method: post
           cors: true
 
-  manageUser:
-    handler: user_lambda.manage_user
+  getUser:
+    handler: user_lambda.get_user
     events:
       - http:
           path: /users/{user_id}
           method: get
           cors: true
+
+  updateUser:
+    handler: user_lambda.update_user
+    events:
       - http:
           path: /users/{user_id}
           method: put
           cors: true
+
+  deleteUser:
+    handler: user_lambda.delete_user
+    events:
       - http:
           path: /users/{user_id}
           method: delete
@@ -48,73 +55,32 @@ resources:
     UsersTable:
       Type: AWS::DynamoDB::Table
       Properties:
-        TableName: ${self:provider.environment.USERS_TABLE}
+        TableName: ${self:provider.environment.TABLE_NAME}
         AttributeDefinitions:
           - AttributeName: user_id
-            AttributeType: S  # ID del usuario (String)
-          - AttributeName: tenant_id
-            AttributeType: S  # ID del tenant (String)
+            AttributeType: S
           - AttributeName: email
-            AttributeType: S  # Correo electrónico del usuario (String)
-          - AttributeName: name
-            AttributeType: S  # Nombre del usuario (String)
-          - AttributeName: role
-            AttributeType: S  # Rol del usuario (String)
+            AttributeType: S
         KeySchema:
-          - AttributeName: tenant_id
-            KeyType: HASH  # La clave HASH es el tenant_id para asegurar multi-tenancy
           - AttributeName: user_id
-            KeyType: RANGE  # La clave RANGE es el user_id, único dentro de cada tenant
-        BillingMode: PAY_PER_REQUEST  # Facturación bajo demanda
+            KeyType: HASH  # Identificador único del usuario
+        BillingMode: PAY_PER_REQUEST
         GlobalSecondaryIndexes:
           - IndexName: email-index
             KeySchema:
               - AttributeName: email
-                KeyType: HASH  # Busca por correo electrónico
-              - AttributeName: tenant_id
-                KeyType: RANGE  # Limita la búsqueda al tenant específico
-            Projection:
-              ProjectionType: ALL
-        LocalSecondaryIndexes:
-          - IndexName: name-index
-            KeySchema:
-              - AttributeName: tenant_id
-                KeyType: HASH  # Busca por tenant_id
-              - AttributeName: name
-                KeyType: RANGE  # Limita la búsqueda por nombre dentro del tenant
+                KeyType: HASH  # Permite búsquedas por email
             Projection:
               ProjectionType: ALL
 
-  # Opcional: Crear un recurso Cognito para la validación de tokens si lo usas
-  # CognitoUserPool:
-  #   Type: AWS::Cognito::UserPool
-  #   Properties:
-  #     UserPoolName: ${self:service}-userpool-${opt:stage, 'dev'}
-
-  # Opcional: Puedes agregar configuraciones de IAM para que las funciones Lambda puedan acceder a DynamoDB y Cognito
-  # IAMRoleLambdaExecution:
-  #   Type: AWS::IAM::Role
-  #   Properties:
-  #     AssumeRolePolicyDocument:
-  #       Version: "2012-10-17"
-  #       Statement:
-  #         - Effect: "Allow"
-  #           Action:
-  #             - "sts:AssumeRole"
-  #           Principal:
-  #             Service:
-  #               - "lambda.amazonaws.com"
-  #     Policies:
-  #       - PolicyName: DynamoDBPolicy
-  #         PolicyDocument:
-  #           Version: "2012-10-17"
-  #           Statement:
-  #             - Effect: "Allow"
-  #               Action:
-  #                 - "dynamodb:Scan"
-  #                 - "dynamodb:GetItem"
-  #                 - "dynamodb:PutItem"
-  #                 - "dynamodb:UpdateItem"
-  #                 - "dynamodb:DeleteItem"
-  #               Resource:
-  #                 - arn:aws:dynamodb:${self:provider.region}:*:table/${self:provider.environment.USERS_TABLE}
+    AuthTokensTable:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: ${self:provider.environment.AUTH_TOKENS_TABLE}
+        AttributeDefinitions:
+          - AttributeName: token
+            AttributeType: S
+        KeySchema:
+          - AttributeName: token
+            KeyType: HASH  # Token único por usuario
+        BillingMode: PAY_PER_REQUEST
