@@ -17,10 +17,15 @@ import ProductDetailPage from "./pages/ProductDetailPage";
 import CreateProductPage from "./pages/CreateProductPage";
 import EditProductPage from "./pages/EditProductPage";
 
+// Páginas de pedidos
+import OrdersPage from "./pages/OrdersPage";
+import CreateOrderPage from "./pages/CreateOrderPage";
+import OrderDetailsPage from "./pages/OrderDetailsPage";
+import UpdateOrderPage from "./pages/UpdateOrderPage";
+import DeleteOrderPage from "./pages/DeleteOrderPage";
+
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
-import LoginForm from "./components/auth/LoginForm";
-import RegisterForm from "./components/auth/RegisterForm";
 
 // Estilos
 import "./styles/App.css";
@@ -39,8 +44,8 @@ const App = () => {
             <Route path="/" element={<Navigate to="/auth/login" />} />
 
             {/* Rutas públicas */}
-            <Route path="/auth/login" element={<LoginForm />} />
-            <Route path="/auth/register" element={<RegisterForm />} />
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register" element={<Register />} />
 
             {/* Ruta protegida para el Perfil */}
             <Route
@@ -82,6 +87,48 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <EditProductPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Rutas de pedidos */}
+            <Route
+              path="/orders"
+              element={
+                <PrivateRoute>
+                  <OrdersPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/orders/:order_id"
+              element={
+                <PrivateRoute>
+                  <OrderDetailsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/orders/create"
+              element={
+                <PrivateRoute>
+                  <CreateOrderPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/orders/:order_id/update"
+              element={
+                <PrivateRoute>
+                  <UpdateOrderPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/orders/:order_id/delete"
+              element={
+                <PrivateRoute>
+                  <DeleteOrderPage />
                 </PrivateRoute>
               }
             />

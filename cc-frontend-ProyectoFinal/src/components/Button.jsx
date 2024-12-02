@@ -1,5 +1,6 @@
-import React from "react";
+
 import { useNavigate, useLocation } from "react-router-dom";
+import PropTypes from "prop-types"; // Importamos PropTypes
 
 export const Button = (props) => {
   const navigate = useNavigate();
@@ -11,15 +12,23 @@ export const Button = (props) => {
 
   const currentButton =
     location.pathname === props.to
-      ? "bg-green-600 text-white font-bold"
-      : "bg-green-500";
+      ? "bg-primary text-white font-bold"
+      : "bg-primary";
 
   return (
     <button
-      className={`${currentButton} mx-6 py-3 px-6 rounded-full cursor-pointer text-white font-bold transition-all duration-300 ease-in-out hover:bg-green-700 hover:scale-105 active:bg-green-800 active:scale-95`}
+      className={`${currentButton} mx-6 py-2 px-4 rounded-full cursor-pointer text-white font-bold`}
       onClick={handleClick}
     >
       {props.message}
     </button>
   );
 };
+
+// Validación de las props
+Button.propTypes = {
+  to: PropTypes.string.isRequired, // 'to' debe ser una cadena y es obligatorio
+  message: PropTypes.string.isRequired, // 'message' debe ser una cadena y es obligatorio
+};
+
+export default Button;
