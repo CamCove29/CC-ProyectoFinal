@@ -4,6 +4,7 @@ import { getProfile, logout } from "../services/authService";
 
 const Profile = () => {
   const [profile, setProfile] = useState(null);
+  const [error, setError] = useState(null); // Estado para manejar errores
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -11,10 +12,12 @@ const Profile = () => {
       try {
         const data = await getProfile();
         setProfile(data);
+        setError(null); // Limpiar el error si la carga fue exitosa
       } catch (err) {
-        alert("Error al cargar perfil. Por favor, inicia sesión.");
-        logout();
-        navigate("/"); // Redirige al login si falla la autenticación
+        console.error("Error al cargar el perfil:", err);
+        setError("Error al cargar el perfil. Por favor, intenta de nuevo.");
+        logout(); // Cerrar sesión en caso de error
+        navigate("/"); // Redirigir al login
       }
     };
     fetchProfile();
@@ -22,9 +25,13 @@ const Profile = () => {
 
   const handleLogout = () => {
     logout();
-    navigate("/"); // Redirige al login tras cerrar sesión
+    navigate("/"); // Redirigir al login después de cerrar sesión
   };
 
+  // Si hay un error, mostrarlo
+  if (error) return <div className="text-red-500 text-center">{error}</div>;
+
+  // Mostrar mensaje de carga mientras se obtiene el perfil
   if (!profile) return <div>Cargando perfil...</div>;
 
   return (
