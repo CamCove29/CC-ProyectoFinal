@@ -1,4 +1,3 @@
-import React from "react";
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,15 +6,21 @@ import {
 } from "react-router-dom";
 import { Helmet } from "react-helmet";
 
-// Páginas
+// Páginas de autenticación
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import Profile from "./pages/Profile";
 
+// Páginas de productos
+import ProductsPage from "./pages/ProductsPage";
+import ProductDetailPage from "./pages/ProductDetailPage";
+import CreateProductPage from "./pages/CreateProductPage";
+import EditProductPage from "./pages/EditProductPage";
+
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
-import LoginForm from "./components/Auth/LoginForm";
-import RegisterForm from "./components/Auth/RegisterForm";
+import LoginForm from "./components/auth/LoginForm";
+import RegisterForm from "./components/auth/RegisterForm";
 
 // Estilos
 import "./styles/App.css";
@@ -43,6 +48,40 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <Profile />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Rutas de productos */}
+            <Route
+              path="/products"
+              element={
+                <PrivateRoute>
+                  <ProductsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products/:productId"
+              element={
+                <PrivateRoute>
+                  <ProductDetailPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products/create"
+              element={
+                <PrivateRoute>
+                  <CreateProductPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/products/:productId/edit"
+              element={
+                <PrivateRoute>
+                  <EditProductPage />
                 </PrivateRoute>
               }
             />
