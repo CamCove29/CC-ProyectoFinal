@@ -1,10 +1,10 @@
 import axios from "axios";
 
-const API_BASE_URL = "https://your-api-endpoint.com"; // Reemplaza con tu endpoint
+const BASE_URL = "http://localhost:5000";// Reemplaza con el puerto
 
 export const getProducts = async (tenantId) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/products`, {
+    const response = await axios.get(`${BASE_URL}/products`, {
       params: { tenant_id: tenantId },
     });
     return response.data;
@@ -16,7 +16,7 @@ export const getProducts = async (tenantId) => {
 
 export const getProduct = async (tenantId, productId) => {
   try {
-    const response = await axios.get(`${API_BASE_URL}/products/${productId}`, {
+    const response = await axios.get(`${BASE_URL}/products/${productId}`, {
       params: { tenant_id: tenantId },
     });
     return response.data;
@@ -28,7 +28,7 @@ export const getProduct = async (tenantId, productId) => {
 
 export const createProduct = async (productData) => {
   try {
-    const response = await axios.post(`${API_BASE_URL}/products`, productData);
+    const response = await axios.post(`${BASE_URL}/products`, productData);
     return response.data;
   } catch (error) {
     console.error("Error creating product:", error);
@@ -39,7 +39,7 @@ export const createProduct = async (productData) => {
 export const updateProduct = async (tenantId, productId, productData) => {
   try {
     const response = await axios.put(
-      `${API_BASE_URL}/products/${productId}`,
+      `${BASE_URL}/products/${productId}`,
       productData,
       { params: { tenant_id: tenantId } }
     );
@@ -53,7 +53,7 @@ export const updateProduct = async (tenantId, productId, productData) => {
 export const deleteProduct = async (tenantId, productId) => {
   try {
     const response = await axios.delete(
-      `${API_BASE_URL}/products/${productId}`,
+      `${BASE_URL}/products/${productId}`,
       {
         params: { tenant_id: tenantId },
       }
