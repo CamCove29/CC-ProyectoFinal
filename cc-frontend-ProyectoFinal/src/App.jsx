@@ -1,3 +1,5 @@
+// src/App.jsx
+
 import {
   BrowserRouter as Router,
   Routes,
@@ -7,9 +9,9 @@ import {
 import { Helmet } from "react-helmet";
 
 // Páginas de autenticación
-import LoginForm from "./components/auth/LoginForm";
-import RegisterForm from "./components/auth/RegisterForm";
-import Profile from "./pages/Profile";
+import Login from "./components/auth/Login";
+import UpdateUser from "./components/auth/UpdateUser";
+import Users from "./components/auth/Users";
 
 // Páginas de productos
 import ProductsPage from "./pages/ProductsPage";
@@ -60,15 +62,25 @@ const App = () => {
             <Route path="/" element={<Navigate to="/auth/login" />} />
 
             {/* Rutas públicas */}
-            <Route path="/auth/login" element={<LoginForm />} />
-            <Route path="/auth/register" element={<RegisterForm />} />
+            <Route path="/auth/login" element={<Login />} />
+            <Route path="/auth/register" element={<Login />} />
 
             {/* Ruta protegida para el Perfil */}
             <Route
               path="/profile"
               element={
                 <PrivateRoute>
-                  <Profile />
+                  <UpdateUser />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Ruta protegida para los usuarios (solo admin) */}
+            <Route
+              path="/users"
+              element={
+                <PrivateRoute requiredRole="admin">
+                  <Users />
                 </PrivateRoute>
               }
             />
