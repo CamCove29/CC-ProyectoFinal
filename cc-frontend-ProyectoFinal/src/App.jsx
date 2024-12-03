@@ -24,6 +24,11 @@ import OrderDetailsPage from "./pages/OrderDetailsPage";
 import UpdateOrderPage from "./pages/UpdateOrderPage";
 import DeleteOrderPage from "./pages/DeleteOrderPage";
 
+// Páginas de reportes
+import CreateReportPage from "./pages/CreateReportPage";
+import ViewReportPage from "./pages/ViewReportPage";
+import ListReportsPage from "./pages/ListReportsPage";
+
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -129,6 +134,31 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <DeleteOrderPage />
+                </PrivateRoute>
+              }
+            />
+            {/* Rutas de reportes */}
+            <Route
+              path="/reports"
+              element={
+                <PrivateRoute>
+                  <ListReportsPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports/create"
+              element={
+                <PrivateRoute>
+                  <CreateReportPage />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/reports/:reportId"
+              element={
+                <PrivateRoute>
+                  <ViewReportPage />
                 </PrivateRoute>
               }
             />
