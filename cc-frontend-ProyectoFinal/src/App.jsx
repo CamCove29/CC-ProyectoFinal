@@ -34,6 +34,12 @@ import InvoiceList from "./components/billing/InvoiceList";
 import CreateInvoice from "./components/billing/CreateInvoice";
 import InvoiceDetails from "./components/billing/InvoiceDetails";
 
+// Páginas de inventario
+import InventoryList from "./components/inventory/InventoryList";
+import CreateProduct from "./components/inventory/CreateProduct";
+import ProductDetails from "./components/inventory/ProductDetails";
+import UpdateProductStock from "./components/inventory/UpdateProductStock";
+
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
 
@@ -191,6 +197,40 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <InvoiceDetails />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Rutas de inventario */}
+            <Route
+              path="/inventory"
+              element={
+                <PrivateRoute>
+                  <InventoryList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/inventory/create"
+              element={
+                <PrivateRoute>
+                  <CreateProduct />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/inventory/:productId"
+              element={
+                <PrivateRoute>
+                  <ProductDetails />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/inventory/:productId/update"
+              element={
+                <PrivateRoute>
+                  <UpdateProductStock />
                 </PrivateRoute>
               }
             />
