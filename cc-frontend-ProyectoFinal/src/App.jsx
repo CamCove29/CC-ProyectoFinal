@@ -7,8 +7,8 @@ import {
 import { Helmet } from "react-helmet";
 
 // Páginas de autenticación
-import Login from "./pages/Login";
-import Register from "./pages/Register";
+import LoginForm from "./components/auth/LoginForm";
+import RegisterForm from "./components/auth/RegisterForm";
 import Profile from "./pages/Profile";
 
 // Páginas de productos
@@ -28,6 +28,11 @@ import DeleteOrderPage from "./pages/DeleteOrderPage";
 import CreateReportPage from "./pages/CreateReportPage";
 import ViewReportPage from "./pages/ViewReportPage";
 import ListReportsPage from "./pages/ListReportsPage";
+
+// Páginas de facturación
+import InvoiceList from "./components/billing/InvoiceList";
+import CreateInvoice from "./components/billing/CreateInvoice";
+import InvoiceDetails from "./components/billing/InvoiceDetails";
 
 // Componentes
 import PrivateRoute from "./components/PrivateRoute";
@@ -49,8 +54,8 @@ const App = () => {
             <Route path="/" element={<Navigate to="/auth/login" />} />
 
             {/* Rutas públicas */}
-            <Route path="/auth/login" element={<Login />} />
-            <Route path="/auth/register" element={<Register />} />
+            <Route path="/auth/login" element={<LoginForm />} />
+            <Route path="/auth/register" element={<RegisterForm />} />
 
             {/* Ruta protegida para el Perfil */}
             <Route
@@ -137,6 +142,7 @@ const App = () => {
                 </PrivateRoute>
               }
             />
+
             {/* Rutas de reportes */}
             <Route
               path="/reports"
@@ -159,6 +165,32 @@ const App = () => {
               element={
                 <PrivateRoute>
                   <ViewReportPage />
+                </PrivateRoute>
+              }
+            />
+
+            {/* Rutas de facturación */}
+            <Route
+              path="/invoices"
+              element={
+                <PrivateRoute>
+                  <InvoiceList />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/invoices/create"
+              element={
+                <PrivateRoute>
+                  <CreateInvoice />
+                </PrivateRoute>
+              }
+            />
+            <Route
+              path="/invoices/:invoiceId"
+              element={
+                <PrivateRoute>
+                  <InvoiceDetails />
                 </PrivateRoute>
               }
             />

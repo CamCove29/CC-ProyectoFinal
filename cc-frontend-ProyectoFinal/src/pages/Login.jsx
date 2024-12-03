@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import {LoginForm} from "../components/auth/LoginForm";
+import { LoginForm } from "../components/auth/LoginForm";
 import { login } from "../services/authService";
 
 const Login = () => {
@@ -25,4 +25,3 @@ const Login = () => {
 };
 
 export default Login;
-

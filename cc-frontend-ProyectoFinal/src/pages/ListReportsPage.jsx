@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import { getReports } from "../services/reportService";
 
 const ListReportsPage = ({ tenantId }) => {
@@ -38,3 +38,4 @@ const ListReportsPage = ({ tenantId }) => {
 };
 
 export default ListReportsPage;
+
