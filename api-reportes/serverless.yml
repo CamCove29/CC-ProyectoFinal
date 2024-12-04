@@ -22,6 +22,8 @@ functions:
           path: /reports/sales/{report_id}
           method: any
           cors: true
+      - http:
+          path: /reports/swagger/
 
 resources:
   Resources:

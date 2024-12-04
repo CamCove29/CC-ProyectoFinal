@@ -16,7 +16,8 @@
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "nodemon": "^3.1.7",
-    "serverless-http": "^3.2.0"
+    "serverless-http": "^3.2.0",
+    "swagger-ui-express": "^5.0.1"
   },
   "devDependencies": {
     "serverless-python-requirements": "^6.1.1",

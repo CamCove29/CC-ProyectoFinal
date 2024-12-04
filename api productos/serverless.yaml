@@ -45,6 +45,13 @@ functions:
           path: /products
           method: delete
           cors: true
+  redirectToSwagger:
+    handler: product_lambda.redirect_to_swagger
+    events:
+      - http:
+          path: /products/swagger
+          method: get
+          cors: true
 
 resources:
   Resources:
