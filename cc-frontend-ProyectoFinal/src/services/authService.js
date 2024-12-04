@@ -1,103 +1,110 @@
+// src/services/authService.js
+
 import axios from "axios";
 
-const BASE_URL = "http://localhost:5000"; // Asumimos que el backend está en localhost:5000
+const API_URL = "http://localhost:5000"; // Cambia esta URL si tu API está en otro lugar
 
-// Función para guardar el token en el almacenamiento local
-const saveToken = (token) => {
-  localStorage.setItem("authToken", token);
-};
+// Crear una instancia de Axios con la URL base
+const api = axios.create({
+  baseURL: API_URL,
+  headers: {
+    "Content-Type": "application/json",
+  },
+});
 
-// Función para obtener el token almacenado
-const getToken = () => {
-  return localStorage.getItem("authToken");
-};
-
-// Función para eliminar el token (cerrar sesión)
-const removeToken = () => {
-  localStorage.removeItem("authToken");
-};
-
-// Función para realizar la autenticación y obtener el perfil
-export const login = async (email, password, tenantId) => {
+// Crear usuario
+export const createUser = async (userData) => {
   try {
-    const response = await axios.post(
-      `${BASE_URL}/login`, // Endpoint de login en tu API
-      { email, password, tenant_id: tenantId }
-    );
-    
-    // Suponiendo que la respuesta contiene un token y un perfil
-    const { token, user } = response.data;
-
-    // Guardar el token
-    saveToken(token);
-
-    // Devolver el perfil del usuario
-    return user;
+    const response = await api.post("/users", userData);
+    const data = response.data;
+    localStorage.setItem("token", data.token); // Guardar el token en localStorage
+    return data;
   } catch (error) {
-    console.error("Error al hacer login", error);
-    throw new Error("Error al iniciar sesión");
+    console.error(
+      "Error al crear el usuario:",
+      error.response ? error.response.data : error.message
+    );
+    return null;
   }
 };
 
-// Función para obtener el perfil del usuario autenticado
-export const getProfile = async () => {
+// Obtener perfil del usuario
+export const getUserProfile = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
   try {
-    const token = getToken();
-
-    // Verificar si el token existe antes de intentar la solicitud
-    if (!token) {
-      throw new Error("Token no encontrado, debes iniciar sesión");
-    }
-
-    // Obtener el tenant_id desde el almacenamiento o de algún otro lugar
-    const tenantId = "tenant_id_from_storage"; // Asegúrate de obtenerlo correctamente
-
-    // Hacer la solicitud al backend para obtener el perfil
-    const response = await axios.get(`${BASE_URL}/profile`, {
+    const response = await api.get("/users", {
       headers: {
         Authorization: `Bearer ${token}`,
-        tenant_id: tenantId,
       },
     });
-
-    return response.data; // Retornar los datos del perfil
+    return response.data;
   } catch (error) {
-    console.error("Error al obtener el perfil", error);
-    throw new Error("Error al obtener el perfil");
+    console.error(
+      "Error al obtener el perfil del usuario:",
+      error.response ? error.response.data : error.message
+    );
+    return null;
   }
 };
 
-// Función para cerrar sesión
-export const logout = () => {
-  removeToken();
+// Actualizar usuario
+export const updateUser = async (userId, userData) => {
+  const token = localStorage.getItem('token');
+  if (!token) return null;
+
+  try {
+    const response = await api.put(`/users/${userId}`, userData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error('Error al actualizar el usuario:', error.response ? error.response.data : error.message);
+    return null;
+  }
 };
 
-// Función para validar si el token es válido
-export const validateToken = async () => {
+// Eliminar usuario
+export const deleteUser = async (userId) => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
   try {
-    const token = getToken();
-
-    if (!token) {
-      throw new Error("Token no encontrado");
-    }
-
-    const tenantId = "tenant_id_from_storage"; // Asegúrate de obtenerlo correctamente
-
-    // Verificar si el token es válido a través de la API
-    const response = await axios.post(
-      `${BASE_URL}/validateToken`, // Endpoint para validar el token
-      { token, tenant_id: tenantId }
-    );
-
-    if (response.data && response.data.valid) {
-      return true;
-    } else {
-      removeToken(); // Eliminar el token si no es válido
-      return false;
-    }
+    const response = await api.delete(`/users/${userId}`, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
   } catch (error) {
-    console.error("Error al validar el token", error);
-    removeToken();
-    return false;
+    console.error(
+      "Error al eliminar el usuario:",
+      error.response ? error.response.data : error.message
+    );
+    return null;
+  }
+};
+
+// Obtener todos los usuarios (solo admin)
+export const getAllUsers = async () => {
+  const token = localStorage.getItem("token");
+  if (!token) return null;
+
+  try {
+    const response = await api.get("/users", {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    return response.data;
+  } catch (error) {
+    console.error(
+      "Error al obtener todos los usuarios:",
+      error.response ? error.response.data : error.message
+    );
+    return null;
   }
 };
