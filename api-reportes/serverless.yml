@@ -24,6 +24,8 @@ functions:
           cors: true
       - http:
           path: /reports/swagger/
+          method: any
+          cors: true
 
 resources:
   Resources:

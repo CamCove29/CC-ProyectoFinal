@@ -1,0 +1,261 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "Billing API",
+        "version": "1.0.0",
+        "description": "API para gestionar facturación, generación de facturas y consulta de detalles."
+    },
+    "servers": [
+        {
+            "url": "https://yjuf1cawel.execute-api.us-east-1.amazonaws.com/dev"
+        }
+    ],
+    "paths": {
+        "/billing/invoices": {
+            "post": {
+                "summary": "Generar una nueva factura",
+                "parameters": [
+                    {
+                        "name": "tenant-id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "ID del tenant"
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "type": "object",
+                                "properties": {
+                                    "order_id": {
+                                        "type": "string",
+                                        "description": "ID de la orden"
+                                    },
+                                    "payment_details": {
+                                        "type": "object",
+                                        "description": "Detalles del pago",
+                                        "properties": {
+                                            "method": {
+                                                "type": "string",
+                                                "description": "Método de pago (e.g., credit_card, cash)"
+                                            },
+                                            "amount": {
+                                                "type": "number",
+                                                "format": "float",
+                                                "description": "Monto pagado"
+                                            }
+                                        },
+                                        "required": [
+                                            "method",
+                                            "amount"
+                                        ]
+                                    }
+                                },
+                                "required": [
+                                    "order_id",
+                                    "payment_details"
+                                ]
+                            },
+                            "example": {
+                                "order_id": "order456",
+                                "payment_details": {
+                                    "method": "credit_card",
+                                    "amount": 150
+                                }
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Factura generada exitosamente",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "invoice_id": "invoice_1733049657433",
+                                    "status": "paid",
+                                    "tenant_id": "tenant_1",
+                                    "order_id": "order456",
+                                    "payment_details": {
+                                        "method": "credit_card",
+                                        "amount": 150
+                                    },
+                                    "created_at": "2023-12-03T12:00:00Z"
+                                }
+                            }
+                        }
+                    },
+                    "400": {
+                        "description": "Datos inválidos",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Invalid data"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error generando la factura",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "error": "Internal server error"
+                                }
+                            }
+                        }
+                    }
+                }
+            },
+            "get": {
+                "summary": "Listar facturas",
+                "parameters": [
+                    {
+                        "name": "tenant-id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "ID del tenant"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Lista de facturas",
+                        "content": {
+                            "application/json": {
+                                "example": [
+                                    {
+                                        "invoice_id": "invoice_1733049657433",
+                                        "status": "paid",
+                                        "tenant_id": "tenant_1",
+                                        "order_id": "order456",
+                                        "payment_details": {
+                                            "method": "credit_card",
+                                            "amount": 150
+                                        },
+                                        "created_at": "2023-12-03T12:00:00Z"
+                                    },
+                                    {
+                                        "invoice_id": "invoice_1733049657434",
+                                        "status": "pending",
+                                        "tenant_id": "tenant_1",
+                                        "order_id": "order457",
+                                        "payment_details": {
+                                            "method": "paypal",
+                                            "amount": 200
+                                        },
+                                        "created_at": "2023-12-02T11:30:00Z"
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error listando las facturas",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "error": "Internal server error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        },
+        "/billing/invoices/{invoice_id}": {
+            "get": {
+                "summary": "Obtener detalles de una factura específica",
+                "parameters": [
+                    {
+                        "name": "tenant-id",
+                        "in": "header",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "ID del tenant"
+                    },
+                    {
+                        "name": "invoice_id",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        },
+                        "description": "ID de la factura"
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Detalles de la factura",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "invoice_id": "invoice_1733049657433",
+                                    "status": "paid",
+                                    "tenant_id": "tenant_1",
+                                    "order_id": "order456",
+                                    "payment_details": {
+                                        "method": "credit_card",
+                                        "amount": 150
+                                    },
+                                    "created_at": "2023-12-03T12:00:00Z"
+                                }
+                            }
+                        }
+                    },
+                    "404": {
+                        "description": "Factura no encontrada",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "message": "Invoice not found"
+                                }
+                            }
+                        }
+                    },
+                    "500": {
+                        "description": "Error obteniendo la factura",
+                        "content": {
+                            "application/json": {
+                                "example": {
+                                    "error": "Internal server error"
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    },
+    "components": {
+        "schemas": {
+            "PaymentDetails": {
+                "type": "object",
+                "properties": {
+                    "method": {
+                        "type": "string",
+                        "description": "Método de pago"
+                    },
+                    "amount": {
+                        "type": "number",
+                        "format": "float",
+                        "description": "Monto pagado"
+                    }
+                },
+                "required": [
+                    "method",
+                    "amount"
+                ]
+            }
+        }
+    }
+}

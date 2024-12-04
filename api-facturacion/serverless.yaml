@@ -22,6 +22,8 @@ functions:
           cors: true
       - http:
           path: /billing/swagger
+          method: any
+          cors: true
 
 resources:
   Resources:

@@ -22,6 +22,8 @@ functions:
           cors: true
       - http:
           path: /inventory/swagger
+          method: any
+          cors: true
 
 resources:
   Resources:
