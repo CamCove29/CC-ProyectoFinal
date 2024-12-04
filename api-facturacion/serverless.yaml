@@ -20,6 +20,8 @@ functions:
           path: /billing/invoices/{invoice_id}
           method: any
           cors: true
+      - http:
+          path: /billing/swagger
 
 resources:
   Resources:

@@ -20,6 +20,8 @@ functions:
           path: /inventory/{product_id}
           method: any
           cors: true
+      - http:
+          path: /inventory/swagger
 
 resources:
   Resources:

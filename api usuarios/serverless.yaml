@@ -10,6 +10,13 @@ provider:
     AUTH_TOKENS_TABLE: ${self:service}-auth-tokens-${opt:stage, 'dev'}
 
 functions:
+  redirectToSwagger:
+    handler: product_lambda.redirect_to_swagger
+    events:
+      - http:
+          path: /products/swagger
+          method: get
+          cors: true
   createUser:
     handler: create_user.lambda_handler
     events:
